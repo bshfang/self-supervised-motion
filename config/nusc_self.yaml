@@ -1,0 +1,91 @@
+tag: 'flowpred_nusc_self'
+random_seed: None
+epochs: 1600
+eval_freq: 1
+save_freq: 200
+batch_size: 16 
+num_workers: 8
+load_model: ""
+
+use_backward_loss: true  # predict backward flow
+
+optimizer:
+  core_method: Adamw
+  lr: 0.008
+  weight_decay: 0.01
+
+scheduler:
+  milestones: [20,40,60]
+  gamma: 0.5
+
+loss:
+  loss_type: 'unsup_pred'
+  range: &lidar_range [-32.0, -32.0, -3.0, 32.0, 32.0, 2.0]
+  voxel_size: &voxel_size [0.25, 0.25, 5.0]
+  chamfer_norm: 1 # 1/2
+  chamfer_remove_static: True  # true for main result
+  use_backward: true
+  single_predict: False
+
+  reg_loss_weight: 1.0
+  w_chamfer: 2.0
+  w_smoothness: 0.1
+  w_temporal_consistency: 0.4
+  w_instance_consistency: 0.1
+
+  smoothness_loss_param:
+    flag: False  # true/false
+    w_knn: 3.
+    w_ball_q: 1.
+    knn_loss_params:
+      k: 16
+      radius: 0.25  # 1
+      loss_norm: 1
+    ball_q_loss_params:
+      k: 64
+      radius: 0.75
+      loss_norm: 1
+  temporal_consistency_loss_param:
+    flag: True
+    loss_norm: 1
+  instance_consistency_loss_param:
+    flag: True  # true for main result
+    loss_norm: 1
+
+  weighted_loss:
+    enabled: True
+    use_static_mask: true
+
+model:
+  point_cloud_range: *lidar_range
+  voxel_size: *voxel_size
+  pillar_vfe:
+    use_norm: true
+    with_distance: false
+    use_absolute_xyz: true
+    num_filters: [32]
+  point_pillar_scatter:
+    num_features: 32
+    point_cloud_range: *lidar_range
+    voxel_size: *voxel_size
+  temporal_model:
+    height_feat_size: 32
+
+data:
+  train_dataset: nuscenes
+  train_data_root: /path/to/processed/nuscenes/data
+  static_mask_path: /path/to/processed/static_mask
+  rigid_piece_path: /path/to/processed/rigid_piece
+  version: v1.0-trainval
+
+  past_frame: 3
+  future_frame: 2
+  nsweeps: 1
+
+  restrict_loss_range: True  # true/false
+
+  point_feature_num: 4
+  point_cloud_range: *lidar_range
+  voxel_size: *voxel_size
+  max_points_in_voxel: 20
+  max_voxel_num: 30000

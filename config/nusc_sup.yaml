@@ -1,0 +1,54 @@
+tag: 'flow_seq_nusc_sup'
+random_seed: 10
+epochs: 100
+eval_freq: 2
+save_freq: 20
+batch_size: 32
+num_workers: 24
+load_model: ""
+
+use_backward_loss: False  # predict backward flow
+
+# supervised_training: true
+optimizer:
+  core_method: Adamw
+  lr: 0.008
+  weight_decay: 0.01
+
+scheduler:
+  milestones: [10, 20, 30, 40, 50, 60]
+  gamma: 0.5
+
+loss:
+  loss_type: 'sup_pred'
+  use_weighted_loss: false
+
+model:
+  point_cloud_range: &lidar_range [-32.0, -32.0, -3.0, 32.0, 32.0, 2.0]
+  voxel_size: &voxel_size [0.25, 0.25, 5.0]
+  pillar_vfe:
+    use_norm: true
+    with_distance: false
+    use_absolute_xyz: true
+    num_filters: [32]
+  point_pillar_scatter:
+    num_features: 32
+    point_cloud_range: *lidar_range
+    voxel_size: *voxel_size
+  temporal_model:
+    height_feat_size: 32
+
+data:
+  train_dataset: nuscenes
+  train_data_root: /path/to/processed/nuscenes/data
+  version: v1.0-trainval
+  past_frame: 3
+  future_frame: 2
+  nsweeps: 1
+
+  point_feature_num: 4
+  point_cloud_range: *lidar_range
+  voxel_size: *voxel_size
+  max_points_in_voxel: 20
+  max_voxel_num: 30000
+
